@@ -167,3 +167,9 @@ tags
 
 # ruff
 .ruff_cache
+ditto/my_corpus.mm
+ditto/wiki1m_for_simcse.txt
+ditto/dictionary.dict
+ditto/my_corpus.mm
+ditto/my_corpus.mm.index
+ditto/tfidf_model.tfidf

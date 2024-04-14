@@ -1,14 +1,15 @@
 #!/bin/bash
 source ~/.bashrc
+conda init
 conda activate ditto
 run_shell() {
   NAME=$(date +%Y%m%d%H)_${short_name}_layer${layer}_head${head}_ditto
   cuda_id=0
   mkdir -p results/$NAME
-  CUDA_VISIBLE_DEVICES=${cuda_id} python evaluation_ditto.py \
+  CUDA_VISIBLE_DEVICES=${cuda_id} python modified_evaluation_ditto.py \
     --model_name_or_path ${model_name} \
     --pooler att_first_last \
-    --task_set sts \
+    --tasks STSBenchmark \
     --layer $layer \
     --head $head \
     --mode test 2>&1 | tee results/$NAME/log_test.txt
