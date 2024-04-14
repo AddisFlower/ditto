@@ -13,24 +13,19 @@ def create_corpus(file_name):
 wiki_file_name = 'wiki1m_for_simcse.txt'
 sentences_list = create_corpus(wiki_file_name)
 
-# Step 1: Preprocess the documents
-# Custom preprocessing pipeline
+# preprocess the sentences
 custom_filters = [lambda x: x.lower(), strip_punctuation, strip_numeric]
 processed_docs = [preprocess_string(doc, custom_filters) for doc in sentences_list]
 
-# Step 2: Prepare a dictionary and a corpus
+# prepare a dictionary and a corpus
 dictionary = corpora.Dictionary(processed_docs)
 corpus = [dictionary.doc2bow(doc) for doc in processed_docs]
 
-# Step 3: Create a TF-IDF model
+# create a TF-IDF model
 tfidf = models.TfidfModel(corpus)  # fit model
 
-# Step 4: Apply transformation to the whole corpus
+# aply transformation to the whole corpus
 corpus_tfidf = tfidf[corpus]
-
-# # Output the TF-IDF weights
-# for doc in corpus_tfidf:
-#     print([[dictionary[id], np.around(freq, decimals=2)] for id, freq in doc])
 
 
 def get_token_tfidf(token, dictionary, tfidf_model, corpus):
@@ -48,4 +43,5 @@ def get_token_tfidf(token, dictionary, tfidf_model, corpus):
     # Return the average importance of a token accross all documents                
     return sum(score for _, score in token_tfidf_scores) / len(token_tfidf_scores)
 
+# Example of getting the average token importance for the token "and"
 print(get_token_tfidf("and", dictionary, tfidf, corpus))
