@@ -41,8 +41,16 @@ class STSEval(object):
             not_empty_idx = raw_scores != ''
 
             gs_scores = [float(x) for x in raw_scores[not_empty_idx]]
+            # Visible Warning occurring here
             sent1 = np.array([s.split() for s in sent1])[not_empty_idx]
             sent2 = np.array([s.split() for s in sent2])[not_empty_idx]
+
+            # # for testing
+            # print('hello im in STSEval loadFile ')
+            # print(sent1)
+            # print('hello2')
+            # print(sent2)
+
             # sort data by length to minimize padding in batcher
             sorted_data = sorted(zip(sent1, sent2, gs_scores),
                                  key=lambda z: (len(z[0]), len(z[1]), z[2]))
@@ -52,6 +60,8 @@ class STSEval(object):
             self.samples += sent1 + sent2
 
     def do_prepare(self, params, prepare):
+        # for testing
+        # print(prepare)
         if 'similarity' in params:
             self.similarity = params.similarity
         else:  # Default similarity is cosine
