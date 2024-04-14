@@ -41,7 +41,7 @@ def main():
                         help="Transformers' model name or path")
     parser.add_argument("--pooler", type=str,
                         choices=['cls', 'cls_before_pooler', 'avg', 'avg_top2', 'avg_first_last',
-                                 'att_first_last', 'avg_static', 'att_last', 'att_static',
+                                 'att_first_last', 'tfidf_first_last', 'avg_static', 'att_last', 'att_static',
                                  ],
                         default='cls',
                         help="Which pooler to use")
@@ -111,7 +111,7 @@ def main():
                 if token in average_tfidf:
                     sentence_importance += average_tfidf[token]
             sentence_importance_list.append(sentence_importance)
-                                                    
+            
         # Tokenization
         if max_length is not None:
             batch = tokenizer.batch_encode_plus(
@@ -143,14 +143,21 @@ def main():
             attention = outputs.attentions
             attention_diag = torch.diagonal(attention[args.layer][:, args.head, :, :], 0, dim1=1, dim2=2)
 
-        # print(len(hidden_states[-1]))
-        # print(len(sentence_importance_list))
-        # Apply different poolers
         if args.pooler == 'cls':
             # There is a linear+activation layer after CLS representation
             return pooler_output.cpu()
         elif args.pooler == 'cls_before_pooler':
             return last_hidden[:, 0].cpu()
+        # Below is the code I added
+        elif args.pooler == 'tfidf_first_last':
+            first_hidden = hidden_states[0]
+            last_hidden = hidden_states[-1]
+            hiddens = first_hidden + last_hidden
+            multiplier_tensor = torch.tensor(sentence_importance_list).unsqueeze(1).unsqueeze(2)
+            result_tensors = hiddens.cpu() * multiplier_tensor.cpu()
+            pooled_result = ((result_tensors) / 2.0 * batch['attention_mask'].unsqueeze(
+                -1).cpu()).sum(1)
+            return pooled_result.cpu()
         elif args.pooler == "avg":
             return ((last_hidden * batch['attention_mask'].unsqueeze(-1)).sum(1) / batch['attention_mask'].sum(
                 -1).unsqueeze(-1)).cpu()
