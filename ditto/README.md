@@ -1,3 +1,41 @@
+# Ditto, Ditto: A Re-Implementation of a Simple and Efficient Approach to Improve Sentence Embeddings
+Steps for Reproducing the results found in the reproduction paper of Ditto:
+1. Clone the repository
+```shell
+git clone https://github.com/AddisFlower/ditto.git
+```
+2. From the root of the repository, change directory to the inner ditto folder
+```shell
+cd ditto
+```
+3. Install conda if not on the current system, else simply create the new conda environment
+```shell
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+sh Miniconda3-latest-Linux-x86_64.sh
+conda create -n ditto python=3.7
+conda activate ditto
+```
+4. Install necessary packages
+```shell
+cd SpokenNLP/ditto
+pip install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
+pip install -r requirements.txt
+```
+5. Download the necessary datasets (note: this step assumes you are currently in the inner ditto folder of the repository)
+```bash
+cd SentEval/data/downstream/
+bash download_dataset.sh
+```
+6a. To replicate the results found in Table 2 of the reproduction paper (note: this code snippet assumes that the user is utilized 1 GPU)
+```bash
+cd ../../../
+bash learning_free_experiments.sh
+```
+
+## Acknowledgement
+We utilized/referenced a large amount of code from the Ditto paper's authors.
+
+
 # Ditto: A Simple and Efficient Approach to Improve Sentence Embeddings
 
 This repository contains the code for our EMNLP 2023 paper [Ditto: A Simple and Efficient Approach to Improve Sentence Embeddings](https://arxiv.org/abs/2305.10786). 
