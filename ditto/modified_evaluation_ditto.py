@@ -27,7 +27,7 @@ PATH_TO_DATA = './SentEval/data'
 sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 
-
+# Function that prints the results in a more readable format
 def print_table(task_names, scores):
     tb = PrettyTable()
     tb.field_names = task_names
@@ -36,6 +36,7 @@ def print_table(task_names, scores):
 
 
 def main():
+    # Parses through the arguments that were passed to the program and set the parameters accordingly
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str,
                         help="Transformers' model name or path")
@@ -68,11 +69,10 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    # Load average tfidf dictionary
+    # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Wikipedia file 
     with open('average_tfidf.json', 'r') as json_file:
         average_tfidf = json.load(json_file)
     
-
     # Set up the tasks
     if args.task_set == 'sts':
         args.tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
@@ -117,31 +117,22 @@ def main():
                 return_tensors='pt',
                 padding=True,
             )
-        sentence_importance_list = []
-        for i in range(len(batch['input_ids'])):
-            token_importance_list = []
-            token_ids = batch['input_ids'][i]  
 
-            # # Convert token IDs back to tokens
-            tokens = tokenizer.convert_ids_to_tokens(token_ids)
-            for token in tokens:
+        # Start of code added by Nathan 
+        sentence_importance_list = [] # A list that contains a list for each sentence in the batch. Each of these lists contains the TF-IDF weights of each encoded token.
+        for i in range(len(batch['input_ids'])): # For each sentence in the batch
+            token_importance_list = [] # List that will contain the TF-IDF weights of each encoded token in that sentence
+
+            token_ids = batch['input_ids'][i]  # Get the token IDs
+            tokens = tokenizer.convert_ids_to_tokens(token_ids) # Convert the token IDs back to tokens
+            for token in tokens: # For each encoded token in the sentence
                 if token in average_tfidf:
-                    token_importance_list.append(average_tfidf[token])
+                    token_importance_list.append(average_tfidf[token]) # If the given token is found in the dictionary, add the TF-IDF weight of that token to the token_importance_list
                 else:
-                    token_importance_list.append(0)
+                    token_importance_list.append(0) # If the given token is not found in the dictionary, add 0 to the token_importance_list. This is important because it weighs the padding tokens by 0.
             sentence_importance_list.append(token_importance_list)
-        
-        # Create the sentence importance list that will be used later on
-        
-        # for s in sentences:
-        #     token_importance_list = []
-        #     for token in s.split():
-        #         # Check that the key exists first
-        #         if token in average_tfidf:
-        #             token_importance_list.append(average_tfidf[token])
-        #         else:
-        #             token_importance_list.append(0)
-        #     sentence_importance_list.append(token_importance_list)
+        # End of code added by Nathan
+
 
         for k in batch:
             batch[k] = batch[k].to(device)
@@ -162,18 +153,21 @@ def main():
             return pooler_output.cpu()
         elif args.pooler == 'cls_before_pooler':
             return last_hidden[:, 0].cpu()
-        # Below is the code I added
+        
+        # Start of code added by Nathan
+        # Implementation of BERT first-last TF-IDF pooling 
         elif args.pooler == 'tfidf_first_last':
-            first_hidden = hidden_states[0]
-            last_hidden = hidden_states[-1]
-            hiddens = first_hidden + last_hidden
+            first_hidden = hidden_states[0] # Get the first hidden state
+            last_hidden = hidden_states[-1] # Get the last hidden state
+            hiddens = first_hidden + last_hidden # Add the first and last hidden state
             for i in range(len(hiddens)): # Going thorugh each sentence in the batch
                 for j in range(len(hiddens[i])): # Going through each token in the sentence
-                    hiddens[i][j] = hiddens[i][j] * sentence_importance_list[i][j]
-            # print(hiddens)
+                    hiddens[i][j] = hiddens[i][j] * sentence_importance_list[i][j] # Multiplying the TF-IDF weight of the token with its corresponding hidden state vector
             pooled_result = ((hiddens).cpu() / 2.0 * batch['attention_mask'].unsqueeze(
-                -1).cpu()).sum(1)
+                -1).cpu()).sum(1) # Take the average like instructed in the paper
             return pooled_result.cpu()
+        # End of code added by Nathan 
+
         elif args.pooler == "avg":
             return ((last_hidden * batch['attention_mask'].unsqueeze(-1)).sum(1) / batch['attention_mask'].sum(
                 -1).unsqueeze(-1)).cpu()
