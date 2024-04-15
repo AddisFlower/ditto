@@ -9,6 +9,7 @@ import transformers
 from transformers import AutoModel, AutoTokenizer
 import sys
 import logging
+from prettytable import PrettyTable
 
 
 # constants used to represent necessary paths for SentEval
@@ -24,6 +25,13 @@ BERT_IMPORTANCE_ATTENTION_HEAD = 10
 sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 
+# function used by the authors for output formatting
+def print_table(task_names, scores):
+    tb = PrettyTable()
+    tb.field_names = task_names
+    tb.add_row(scores)
+    print(tb)
+
 # SentEval prepare (can be used to construct the vocabulary)
 def prepare(params, samples):
     return
@@ -38,7 +46,7 @@ def batcher(params, batch):
         # handles token encoding issues by decoding the bytes object token a utf-8 string object
         batch = [[word.decode('utf-8') for word in s] for s in batch]
 
-    print(f'Number of Sentences in Batch: {len(batch)}')
+    # print(f'Number of Sentences in Batch: {len(batch)}')
 
     # concatenate the words in the sentences together again. 
     # this is required due to the load file method of the STSEval class in SentEval 
@@ -58,7 +66,6 @@ def batcher(params, batch):
     token_type_ids = batch_encoded_dict['token_type_ids']
     attention_masks = batch_encoded_dict['attention_mask']
 
-    # move tensors to the GPU
     b_input_ids = input_ids.to(device)
     b_token_type_ids = token_type_ids.to(device)
     b_attention_masks = attention_masks.to(device)
@@ -82,61 +89,76 @@ def batcher(params, batch):
         # tuple of tensors (one for each layer) of shape (batch_size, num_heads, sequence_length, sequence_length)
         attentions = outputs['attentions']
 
-    # check dimensions of returned hidden_states and attentions tuples
-    print(f'Number of Layers: {len(hidden_states)}')
-    print(f'Number of Attention Layers: {len(attentions)}')
+    # # check dimensions of returned hidden_states and attentions tuples
+    # print(f'Number of Layers: {len(hidden_states)}')
+    # print(f'Number of Attention Layers: {len(attentions)}')
 
     # get the attention layer identified as representing the word importance in the paper
     importance_attention_layer = attentions[BERT_IMPORTANCE_ATTENTION_LAYER - 1]
 
-    # check dimensions of tensors in hidden_states and attentions
-    print(f'Dimensions of Tensors in hidden_states: {hidden_states[-1].size()}')
-    print(f'Dimensions of Tensors in Importance Attention Layer: {importance_attention_layer.size()}')
+    # # check dimensions of tensors in hidden_states and attentions
+    # print(f'Dimensions of Tensors in hidden_states: {hidden_states[-1].size()}')
+    # print(f'Dimensions of Tensors in Importance Attention Layer: {importance_attention_layer.size()}')
 
     # get the attention head matrix identified as representing the word importance in the paper
     importance_attention_heads = importance_attention_layer[:, BERT_IMPORTANCE_ATTENTION_HEAD - 1, :, :]
 
     # get the diagonal values of the attention matrix for each sentence in the batch
     diagonal_values = torch.diagonal(importance_attention_heads, 0, 1, 2)
-    #
 
-    # check dimensions of tensors in importance_attention_heads and diagonal_values
-    print(f'Dimensions of Tensors in Importance Attention Heads: {importance_attention_heads.size()}')
-    print(f'Dimensions of Tensors in Diagonal Attention Values: {diagonal_values.size()}')
+    # get the last_hidden_layer from hidden_states for computing BERT last Ditto
+    last_hidden_layer = hidden_states[-1]
 
-    # compute sentence embedding for BERT last Ditto
+    # # check dimensions of tensors in importance_attention_heads and diagonal_values
+    # # print(f'Dimensions of Tensors in Importance Attention Heads: {importance_attention_heads.size()}')
+    # print(f'Dimensions of Tensors in Diagonal Attention Values: {diagonal_values.size()}')
+    # print(f'Dimensions of attention_masks {attention_masks.size()}')
+    # print(f'Dimensions of last_hidden_layer {last_hidden_layer.size()}')
+
+    # the below lines of code are heavily inspired by the authors, especially the utilization of the unsqueeze()
+    # function to allow for matrix multiplication 
+    # compute sentence embeddings for BERT last Ditto
     # not normalized by N due to potentially resulting in very small values
-    # (1/2) * Summation_{i=1 to N} (A_{ii} * (h_{i L}))
+    # Summation_{i=1 to N} (A_{ii} * (h_{i L} * attention_masks))
+    # note: the last hidden layer is multiplied by attention_masks to zero out the 
+    # embeddings for padding tokens
 
+    # append a singleton dimension to attention_masks as the last dimension
+    # this is required for matrix multiplication due to PyTorch's broadcasting semantics, which
+    # allows for batched matrix multiplication
+    broadcastable_attention_masks = b_attention_masks.unsqueeze(-1)
 
+    # compute the last_hidden_layer with its embeddings for padding words zero'd out
+    last_hidden_padding_zero = last_hidden_layer * broadcastable_attention_masks
 
+    # # for debugging
+    # print(b_attention_masks[0])
+    # print(last_hidden_layer[0])
+    # print(last_hidden_padding_zero[0])
+    # print(last_hidden_padding_zero[0][8])
+    # print(last_hidden_padding_zero[0][9])
 
-    sentence_embeddings = None
-    exit(1)
-    
-    return sentence_embeddings
+    # append a singleton dimension to diagonal_values for the same reasoning as above
+    broadcastable_diagonal_values = diagonal_values.unsqueeze(-1)
 
+    ditto_word_embeddings = last_hidden_padding_zero * broadcastable_diagonal_values
 
+    # # for debugging
+    # print(broadcastable_diagonal_values[0])
+    # print(last_hidden_padding_zero[0])
+    # print(ditto_word_embeddings[0])
 
-    # # for testing
-    # print(importance_attention_layer[0])
-    # print(importance_attention_heads[0])
-    # print(diagonal_values[0])
-    # print(diagonal_values.size())
+    # compute the sentence embeddings by summing over each word in the sentence's 
+    # ditto word embeddings
+    sentence_embeddings = torch.sum(ditto_word_embeddings, dim=1)
 
-    # check dimension of tensors in importance_attention_heads
-    # print(importance_attention_heads.size())
+    # # for debugging
+    # print(ditto_word_embeddings.size())
+    # print(sentence_embeddings.size())
+    # print(ditto_word_embeddings[0].sum(0))
+    # print(sentence_embeddings[0])
 
-    # # print out the attention matrix for layer 1 and attention head 10
-    # importance_attention_head = outputs['attentions'][BERT_IMPORTANCE_ATTENTION_LAYER - 1][BERT_IMPORTANCE_ATTENTION_HEAD - 1][0] # currently only looking at the first sentence in the batch
-
-    # print(importance_attention_head)
-    # print('testing here')
-    # print(importance_attention_head[0])
-    exit(1)
-
-
-
+    return sentence_embeddings.cpu()
 
 torch.cuda.empty_cache()
 
@@ -163,15 +185,33 @@ tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 # tell pytorch to run the model on GPU
 model.cuda()
 
-se = senteval.engine.SE(params_senteval, batcher, prepare)
-
 # the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
-# sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
-sts_tasks = 'STS12'
+sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
 
-# creates an object of the class associated with the sts_task, which loads the required datasets,
+# creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.
-# finally, runs the batcher function to get the sentence-level encodings for each batch and computes the average
-# pearson and spearman scores for the dataset
+# finally, runs the batcher function to get the sentence-level encodings for each batch and computes the
+# pearson and spearman scores for all the datasets associated with the task
+se = senteval.engine.SE(params_senteval, batcher, prepare)
 results = se.eval(sts_tasks)
-print(results)
+
+# code provided by the authors to retrieve the spearman correlation results for all datasets of the 
+# 'STS' prefixed tasks except for STSBenchmark. for STSBenchmark and SICKRelatedness, the code retrieves
+# the spearman correlation results for the test datasets.
+# also prepares the output table to showcase the experiment results
+print("------ %s ------" % ('test'))
+task_names = []
+scores = []
+for task in sts_tasks:
+    task_names.append(task)
+    if task in results:
+        if task in ['STS12', 'STS13', 'STS14', 'STS15', 'STS16']:
+            scores.append("%.2f" % (results[task]['all']['spearman']['all'] * 100))
+        else:
+            scores.append("%.2f" % (results[task]['test']['spearman'].correlation * 100))
+    else:
+        scores.append("0.00")
+task_names.append("Avg.")
+scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
+print_table(task_names, scores)
+print(' '.join(scores))
