@@ -7,3 +7,4 @@ prettytable
 gradio
 torch
 setuptools
+gensim
