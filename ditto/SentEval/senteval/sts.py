@@ -75,8 +75,14 @@ class STSEval(object):
         all_gs_scores = []
 
         for dataset in self.datasets:
+            # input1 is a list of all the words in the first sentences in the dataset
+            # input2 is a list of all the words in the second sentences in the dataset
+            # gs_scores are the human-annotated text similarity scores
+            # sys_scores are the machine computed text similarity scores
+            # note: input1, input2, gs_scores all have the same length
             sys_scores = []
             input1, input2, gs_scores = self.data[dataset]
+
             all_enc1 = []
             all_enc2 = []
             for ii in range(0, len(gs_scores), params.batch_size):
@@ -96,6 +102,28 @@ class STSEval(object):
             all_sys_scores.extend(sys_scores)
             all_gs_scores.extend(gs_scores)
 
+            # # for error analysis testing
+            # print(len(input1))
+            # print(len(input2))
+            # print(len(gs_scores))
+            # print(len(sys_scores))
+            # exit(1)
+
+            # # for error analysis
+            # # note: input1, input2, gs_scores, and sys_scores are lists with the same length
+            # # compute the largest difference between the sys_scores and gs_scores for each dataset
+            # score_diffs = [abs(gs_scores[i] - sys_scores[i]) for i in range(len(sys_scores))]
+            # # print(f'Maximum model score: {max(sys_scores)}')
+            # # print(f'Minimum model score: {min(sys_scores)}')
+            # max_difference = max(score_diffs)
+            # max_difference_idx = score_diffs.index(max_difference)
+            # print(f'For this dataset, the max difference in sts scores was: {max_difference}')
+            # print('The first sentence was:')
+            # print(input1[max_difference_idx])
+            # print('The second sentence was:')
+            # print(input2[max_difference_idx])
+            # print(f'The Human-annotated score was: {gs_scores[max_difference_idx]}')
+            # print(f'The Machine computed score was: {sys_scores[max_difference_idx]}')
 
             def _norm(x, eps=1e-8): 
                 xnorm = torch.linalg.norm(x, dim=-1)
@@ -134,7 +162,6 @@ class STSEval(object):
                            results[dataset]['uniform_loss']))
 
             # logging.info(f'align {align}\t\t uniform {unif}')
-
 
         weights = [results[dset]['nsamples'] for dset in results.keys()]
         list_prs = np.array([results[dset]['pearson'][0] for
