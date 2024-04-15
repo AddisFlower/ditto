@@ -102,16 +102,6 @@ def main():
 
         sentences = [' '.join(s) for s in batch]
 
-        # Create the sentence importance list that will be used later on
-        sentence_importance_list = []
-        for s in sentences:
-            sentence_importance = 0
-            for token in s.split():
-                # Check that the key exists first
-                if token in average_tfidf:
-                    sentence_importance += average_tfidf[token]
-            sentence_importance_list.append(sentence_importance)
-            
         # Tokenization
         if max_length is not None:
             batch = tokenizer.batch_encode_plus(
@@ -127,9 +117,32 @@ def main():
                 return_tensors='pt',
                 padding=True,
             )
+        sentence_importance_list = []
+        for i in range(len(batch['input_ids'])):
+            token_importance_list = []
+            token_ids = batch['input_ids'][i]  
 
-        # Move to the correct device
+            # # Convert token IDs back to tokens
+            tokens = tokenizer.convert_ids_to_tokens(token_ids)
+            for token in tokens:
+                if token in average_tfidf:
+                    token_importance_list.append(average_tfidf[token])
+                else:
+                    token_importance_list.append(0)
+            sentence_importance_list.append(token_importance_list)
         
+        # Create the sentence importance list that will be used later on
+        
+        # for s in sentences:
+        #     token_importance_list = []
+        #     for token in s.split():
+        #         # Check that the key exists first
+        #         if token in average_tfidf:
+        #             token_importance_list.append(average_tfidf[token])
+        #         else:
+        #             token_importance_list.append(0)
+        #     sentence_importance_list.append(token_importance_list)
+
         for k in batch:
             batch[k] = batch[k].to(device)
 
@@ -142,6 +155,7 @@ def main():
             hidden_states = outputs.hidden_states
             attention = outputs.attentions
             attention_diag = torch.diagonal(attention[args.layer][:, args.head, :, :], 0, dim1=1, dim2=2)
+        
 
         if args.pooler == 'cls':
             # There is a linear+activation layer after CLS representation
@@ -153,9 +167,11 @@ def main():
             first_hidden = hidden_states[0]
             last_hidden = hidden_states[-1]
             hiddens = first_hidden + last_hidden
-            multiplier_tensor = torch.tensor(sentence_importance_list).unsqueeze(1).unsqueeze(2)
-            result_tensors = hiddens.cpu() * multiplier_tensor.cpu()
-            pooled_result = ((result_tensors) / 2.0 * batch['attention_mask'].unsqueeze(
+            for i in range(len(hiddens)): # Going thorugh each sentence in the batch
+                for j in range(len(hiddens[i])): # Going through each token in the sentence
+                    hiddens[i][j] = hiddens[i][j] * sentence_importance_list[i][j]
+            # print(hiddens)
+            pooled_result = ((hiddens).cpu() / 2.0 * batch['attention_mask'].unsqueeze(
                 -1).cpu()).sum(1)
             return pooled_result.cpu()
         elif args.pooler == "avg":

@@ -8,8 +8,8 @@ run_shell() {
   CUDA_VISIBLE_DEVICES=${cuda_id} python modified_evaluation_ditto.py \
     --model_name_or_path ${model_name} \
     --pooler tfidf_first_last \
-    --tasks STSBenchmark \
-    --task_set na \
+    --tasks STS12 \
+    --task_set sts \
     --layer $layer \
     --head $head \
     --mode test 2>&1 | tee results/$NAME/log_test.txt
