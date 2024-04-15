@@ -26,7 +26,7 @@ pip install -r requirements.txt
 cd SentEval/data/downstream/
 bash download_dataset.sh
 ```
-6a. To replicate the results found in Table 2 of the reproduction paper (note: this code snippet assumes that the user is utilized 1 GPU)
+6a. To replicate the results found in Table 2 of the reproduction paper (note: this code snippet assumes that the user is utilizing 1 GPU)
 ```bash
 cd ../../../
 bash learning_free_experiments.sh
