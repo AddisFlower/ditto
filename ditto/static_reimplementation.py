@@ -3,6 +3,7 @@
 # https://github.com/alibaba-damo-academy/SpokenNLP/tree/main/ditto/SentEval
 # https://github.com/princeton-nlp/SimCSE?tab=readme-ov-file#overview
 # https://realpython.com/python-string-concatenation/#efficiently-concatenating-many-strings-with-join-in-python
+# https://discuss.huggingface.co/t/how-to-get-embedding-matrix-of-bert-in-hugging-face/10261/4
 
 import torch
 import transformers
@@ -60,7 +61,7 @@ def batcher(params, batch):
                                                      add_special_tokens = True,
                                                      padding = True, 
                                                      return_tensors = 'pt')
-    
+        
     # batch_encoded_dict = batch_encoded_dict.to(device)
     input_ids = batch_encoded_dict['input_ids']
     token_type_ids = batch_encoded_dict['token_type_ids']
@@ -83,6 +84,7 @@ def batcher(params, batch):
                         output_attentions=True,
                         return_dict=True
                         )
+
         # tuple of tensors (one for the output of the embeddings + one for output of each layer) of shape
         # (batch_size, sequence_length, hidden_size)
         hidden_states = outputs['hidden_states']
@@ -106,54 +108,58 @@ def batcher(params, batch):
     # get the diagonal values of the attention matrix for each sentence in the batch
     diagonal_values = torch.diagonal(importance_attention_heads, 0, 1, 2)
 
-    # get the last_hidden_layer and first_hidden_layer from hidden_states for computing BERT first-last Ditto
-    last_hidden_layer = hidden_states[-1]
-    first_hidden_layer = hidden_states[0]
+    # get the input embeddings for computing BERT static Ditto
+    input_embeddings = torch.ones(hidden_states[-1].size(), dtype=torch.float32)
+
+    # lookup the input embeddings from the embedding_matrix
+    # TODO - if time allows try to find a solution that uses vector operations
+    for i in range(input_embeddings.size()[0]):
+        for j in range(input_embeddings.size()[1]):
+            input_embeddings[i][j] = embedding_matrix[input_ids[i][j]].detach()
+
+    # move input_embeddings to the GPU
+    input_embeddings = input_embeddings.to(device)
+
+    # # check that the embedding vectors were correctly looked up
+    # print(input_embeddings[0][0])
+    # print(input_ids[0][0]) 
+    # print(embedding_matrix[input_ids[0][0]])
 
     # # check dimensions of tensors in importance_attention_heads and diagonal_values
     # # print(f'Dimensions of Tensors in Importance Attention Heads: {importance_attention_heads.size()}')
     # print(f'Dimensions of Tensors in Diagonal Attention Values: {diagonal_values.size()}')
     # print(f'Dimensions of attention_masks {attention_masks.size()}')
-    # print(f'Dimensions of last_hidden_layer {last_hidden_layer.size()}')
-    # print(f'Dimensions of first_hidden_layer {first_hidden_layer.size()}')
+    # print(f'Dimensions of input_embeddings {input_embeddings.size()}')
 
     # the below lines of code are heavily inspired by the authors, especially the utilization of the unsqueeze()
     # function to allow for matrix multiplication 
-    # compute sentence embeddings for BERT first-last Ditto
+    # compute sentence embeddings for BERT static Ditto
     # not normalized by N due to potentially resulting in very small values
-    # (1/2) * Summation_{i=1 to N} (A_{ii} * ((h_{i L} + h_{i 1}) * attention_masks))
-    # note: the first-last hidden layer is multiplied by attention_masks to zero out the 
+    # Summation_{i=1 to N} (A_{ii} * (h_{i 0} * attention_masks))
+    # note: the input embeddings is multiplied by attention_masks to zero out the 
     # embeddings for padding tokens
-
-    # compute sum of first_hidden_layer and last_hidden_layer
-    first_last_hidden_layer = last_hidden_layer + first_hidden_layer
-
-    # # for debugging
-    # print(last_hidden_layer[0])
-    # print(first_hidden_layer[0])
-    # print(first_last_hidden_layer[0])
 
     # append a singleton dimension to attention_masks as the last dimension
     # this is required for matrix multiplication due to PyTorch's broadcasting semantics, which
     # allows for batched matrix multiplication
     broadcastable_attention_masks = b_attention_masks.unsqueeze(-1)
 
-    # compute the first_last_hidden_layer with its embeddings for padding words zero'd out
-    first_last_hidden_padding_zero = first_last_hidden_layer * broadcastable_attention_masks
+    # compute the input_embeddings with its embeddings for padding words zero'd out
+    input_embeddings_padding_zero = input_embeddings * broadcastable_attention_masks
 
     # # for debugging
     # print(b_attention_masks[0])
-    # print(first_last_hidden_layer[0])
-    # print(first_last_hidden_padding_zero[0])
+    # print(input_embeddings[0])
+    # print(input_embeddings_padding_zero[0])
 
     # append a singleton dimension to diagonal_values for the same reasoning as above
     broadcastable_diagonal_values = diagonal_values.unsqueeze(-1)
 
-    ditto_word_embeddings = first_last_hidden_padding_zero * broadcastable_diagonal_values
+    ditto_word_embeddings = input_embeddings_padding_zero * broadcastable_diagonal_values
 
     # # for debugging
     # print(broadcastable_diagonal_values[0])
-    # print(first_last_hidden_padding_zero[0])
+    # print(input_embeddings_padding_zero[0])
     # print(ditto_word_embeddings[0])
 
     # compute the sentence embeddings by summing over each word in the sentence's 
@@ -192,6 +198,9 @@ model = AutoModel.from_pretrained("bert-base-uncased")
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 # tell pytorch to run the model on GPU
 model.cuda()
+
+# get BERT's word embeddings matrix to get the input embeddings
+embedding_matrix = model.embeddings.word_embeddings.weight
 
 # the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
 sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
