@@ -4,40 +4,37 @@ Steps for Reproducing the results found in the reproduction paper of Ditto:
 ```shell
 git clone https://github.com/AddisFlower/ditto.git
 ```
-2. From the root of the repository, change directory to the inner ditto folder
-```shell
-cd ditto
-```
-3. Install conda if not on the current system, else simply create the new conda environment
+2. Install conda if not on the current system, else simply create the new conda environment (note: this step can be performed at any desired folder location of the user)
 ```shell
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 sh Miniconda3-latest-Linux-x86_64.sh
 conda create -n ditto python=3.7
 conda activate ditto
 ```
-4. Install necessary packages
+3. Install necessary packages (note: this step assumes that you have navigated to the root directory of the repository)
 ```shell
-cd SpokenNLP/ditto
+cd ditto
 pip install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
 ```
-5. Download the necessary datasets (note: this step assumes you are currently in the inner ditto folder of the repository)
+4. Download the necessary datasets (note: this step assumes you are currently in the inner ditto folder of the repository)
 ```bash
 cd SentEval/data/downstream/
 bash download_dataset.sh
 ```
-6a. To replicate the results found in Table 2 of the reproduction paper (note: this code snippet assumes that the user is utilizing 1 GPU)
+5. To replicate the results found in Table 2 of the reproduction paper (note: this code snippet assumes that the user is utilizing 1 GPU)
 ```bash
 cd ../../../
 bash learning_free_experiments.sh
 ```
 
-
 Steps for reproducing and comparing the average scores for our implementation of BERT first-last TF-IDF and BERT first-last Ditto
+
+Note: These steps assume that you are currently in the root folder of the repository.
 
 1. To get the average score of our implementation of BERT first-last Ditto, simply run the below commands after confirming that the argument "--pooler" is set to "att_first_last" in the run_eval_ditto.sh file.
 ```shell
-cd SpokenNLP/ditto/ditto
+cd ditto
 sh run_eval_ditto.sh
 ```
 
