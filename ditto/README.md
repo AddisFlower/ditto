@@ -30,7 +30,7 @@ bash learning_free_experiments.sh
 
 Steps for reproducing and comparing the average scores for our implementation of BERT first-last TF-IDF and BERT first-last Ditto
 
-Note: These steps assume that you are currently in the root folder of the repository.
+Note: These steps assume that you are currently in the root folder of the repository. Also, you should have downloaded the wikipedia dataset from this [link](https://huggingface.co/datasets/princeton-nlp/datasets-for-simcse/resolve/main/wiki1m_for_simcse.txt) and put in in the root folder.
 
 1. To get the average score of our implementation of BERT first-last Ditto, simply run the below commands after confirming that the argument "--pooler" is set to "att_first_last" in the run_eval_ditto.sh file.
 ```shell
