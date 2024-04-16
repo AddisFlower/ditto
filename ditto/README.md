@@ -41,12 +41,12 @@ cd SpokenNLP/ditto/ditto
 sh run_eval_ditto.sh
 ```
 
-2. To get the average score of our implementation of BERT first-last TF-IDF, first run the below command to get a json file with the dictionary of TF-IDF weights
+2. To get the average score of our implementation of BERT first-last TF-IDF, first run the below command to get a json file with the dictionary of TF-IDF weights.
 ```shell
 python tfidf.py
 ```
 
-3. After that run the below command, after changing the argument "--pooler" to "tfidf_first_last" in the run_eval_ditto.sh file.
+3. Change the argument "--pooler" to "tfidf_first_last" in the run_eval_ditto.sh file and then run the command below.
 ```shell
 sh run_eval_ditto.sh
 ```
