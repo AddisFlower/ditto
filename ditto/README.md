@@ -32,6 +32,25 @@ cd ../../../
 bash learning_free_experiments.sh
 ```
 
+
+Steps for reproducing and comparing the average scores for our implementation of BERT first-last TF-IDF and BERT first-last Ditto
+
+1. To get the average score of our implementation of BERT first-last Ditto, simply run the below commands after confirming that the argument "--pooler" is set to "att_first_last"
+```shell
+cd SpokenNLP/ditto/ditto
+sh run_eval_ditto.sh
+```
+
+2. To get the average score of our implementation of BERT first-last TF-IDF, first run the below command to get a json file with the dictionary of TF-IDF weights
+```shell
+python tfidf.py
+```
+
+3. After that run the below command, after changing the argument "--pooler" to "tfidf_first_last"
+```shell
+sh run_eval_ditto.sh
+```
+
 ## Acknowledgement
 We utilized/referenced a large amount of code from the Ditto paper's authors.
 
