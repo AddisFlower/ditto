@@ -13,7 +13,7 @@ def create_corpus(file_name):
         return sentences_list
 
 # Returns dictionary of token importance for each distinct token in the corpus. The dictionary is saved in a json file, so that token importance retrieval later on can be more efficient.
-def token_importance(tfidf, dictionary, corpus):
+def token_importance(tfidf, dictionary, corpus, file_name):
 
     # Calculate the average TF-IDF score for each token in the dictionary
     token_tfidf_sum = {dictionary[id]: 0 for id in range(len(dictionary))}
@@ -26,11 +26,14 @@ def token_importance(tfidf, dictionary, corpus):
 
     average_tfidf = {token: (token_tfidf_sum[token] / token_document_count[token]) 
                     for token in token_tfidf_sum if token_document_count[token] > 0}
-    with open('average_tfidf.json', 'w') as json_file:
+    with open(file_name, 'w') as json_file:
         json.dump(average_tfidf, json_file)
 
+
+language = 'it'
+
 # Create the sentence list using the 1 million wikepedia sentences
-wiki_file_name = 'wiki1m_for_simcse.txt'
+wiki_file_name = f'sampled_{language}_sentences.txt'
 sentences_list = create_corpus(wiki_file_name)
 
 # preprocess the sentences
@@ -44,5 +47,7 @@ corpus = [dictionary.doc2bow(doc) for doc in processed_docs]
 # create a TF-IDF model
 tfidf = models.TfidfModel(corpus)  # fit model
 
+file_name = f'average_tfidf_{language}.json'
+
 # Creates and returns the average token importance json file. 
-token_importance(tfidf, dictionary, corpus)
+token_importance(tfidf, dictionary, corpus, file_name)

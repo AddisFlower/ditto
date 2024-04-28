@@ -18,7 +18,7 @@ from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
 from senteval.sick import SICKEntailmentEval, SICKEval
 from senteval.mrpc import MRPCEval
-from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval, SICKRelatednessEval, STSBenchmarkFinetune, STSBenchmarkEvalES
+from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval, SICKRelatednessEval, STSBenchmarkFinetune, STSBenchmarkEvalES, STSBenchmarkEvalFR, STSBenchmarkEvalIT, STSBenchmarkEvalPT
 from senteval.sst import SSTEval
 from senteval.rank import ImageCaptionRetrievalEval
 from senteval.probing import *
@@ -53,7 +53,7 @@ class SE(object):
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                            'OddManOut', 'CoordinationInversion', 'SICKRelatedness-finetune', 'STSBenchmark-finetune', 'STSBenchmark-fix',
-                           'STSBenchmarkES']
+                           'STSBenchmarkES', 'STSBenchmarkFR', 'STSBenchmarkIT', 'STSBenchmarkPT']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -88,6 +88,12 @@ class SE(object):
         # added for STSB_ES
         elif name == 'STSBenchmarkES':
             self.evaluation = STSBenchmarkEvalES(tpath + '/downstream/STS/STSBenchmarkES', seed=self.params.seed)
+        # added for STSB_FR
+        elif name == 'STSBenchmarkFR':
+            self.evaluation = STSBenchmarkEvalFR(tpath + '/downstream/STS/STSBenchmarkFR', seed=self.params.seed)
+        # added for STSB_IT
+        elif name == 'STSBenchmarkIT':
+            self.evaluation = STSBenchmarkEvalIT(tpath + '/downstream/STS/STSBenchmarkIT', seed=self.params.seed)
         elif name == 'STSBenchmark-fix':
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark-fix', seed=self.params.seed)
         elif name == 'STSBenchmark-finetune':

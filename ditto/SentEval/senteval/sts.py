@@ -295,6 +295,102 @@ class STSBenchmarkEvalES(STSEval):
         self.samples += sick_data['X_A'] + sick_data["X_B"]
         return (sick_data['X_A'], sick_data["X_B"], sick_data['y'])
 
+# added for STSBenchmarkEvalFR
+class STSBenchmarkEvalFR(STSEval):
+    def __init__(self, task_path, seed=1111):
+        logging.debug('\n\n***** Transfer task : STSBenchmarkFR*****\n\n')
+        self.seed = seed
+        self.samples = []
+        train = self.loadFile(os.path.join(task_path, 'stsb-fr-train.csv'))
+        dev = self.loadFile(os.path.join(task_path, 'stsb-fr-dev.csv'))
+        test = self.loadFile(os.path.join(task_path, 'stsb-fr-test.csv'))
+        self.datasets = ['train', 'dev', 'test']
+        self.data = {'train': train, 'dev': dev, 'test': test}
+
+    # updated using PhilipMay's dataset and example for reading dataset
+    # csv library used to ignore commas between quotes
+    def loadFile(self, fpath):
+        sick_data = {'X_A': [], 'X_B': [], 'y': []}
+
+        with open(fpath, newline="", encoding="utf-8") as f:
+            csv_dict_reader = csv.DictReader(
+                f,
+                dialect='excel',
+                fieldnames=["sentence1", "sentence2", "similarity_score"],
+            )
+            for row in csv_dict_reader:
+                sick_data['X_A'].append(row['sentence1'].split())
+                sick_data['X_B'].append(row['sentence2'].split())
+                sick_data['y'].append(row['similarity_score'])   
+
+        sick_data['y'] = [float(s) for s in sick_data['y']]
+        self.samples += sick_data['X_A'] + sick_data["X_B"]
+        return (sick_data['X_A'], sick_data["X_B"], sick_data['y'])
+
+# added for STSBenchmarkEvalIT
+class STSBenchmarkEvalIT(STSEval):
+    def __init__(self, task_path, seed=1111):
+        logging.debug('\n\n***** Transfer task : STSBenchmarkIT*****\n\n')
+        self.seed = seed
+        self.samples = []
+        train = self.loadFile(os.path.join(task_path, 'stsb-it-train.csv'))
+        dev = self.loadFile(os.path.join(task_path, 'stsb-it-dev.csv'))
+        test = self.loadFile(os.path.join(task_path, 'stsb-it-test.csv'))
+        self.datasets = ['train', 'dev', 'test']
+        self.data = {'train': train, 'dev': dev, 'test': test}
+
+    # updated using PhilipMay's dataset and example for reading dataset
+    # csv library used to ignore commas between quotes
+    def loadFile(self, fpath):
+        sick_data = {'X_A': [], 'X_B': [], 'y': []}
+
+        with open(fpath, newline="", encoding="utf-8") as f:
+            csv_dict_reader = csv.DictReader(
+                f,
+                dialect='excel',
+                fieldnames=["sentence1", "sentence2", "similarity_score"],
+            )
+            for row in csv_dict_reader:
+                sick_data['X_A'].append(row['sentence1'].split())
+                sick_data['X_B'].append(row['sentence2'].split())
+                sick_data['y'].append(row['similarity_score'])   
+
+        sick_data['y'] = [float(s) for s in sick_data['y']]
+        self.samples += sick_data['X_A'] + sick_data["X_B"]
+        return (sick_data['X_A'], sick_data["X_B"], sick_data['y'])
+
+# added for STSBenchmarkEvalPT
+class STSBenchmarkEvalPT(STSEval):
+    def __init__(self, task_path, seed=1111):
+        logging.debug('\n\n***** Transfer task : STSBenchmarkFR*****\n\n')
+        self.seed = seed
+        self.samples = []
+        train = self.loadFile(os.path.join(task_path, 'stsb-pt-train.csv'))
+        dev = self.loadFile(os.path.join(task_path, 'stsb-pt-dev.csv'))
+        test = self.loadFile(os.path.join(task_path, 'stsb-pt-test.csv'))
+        self.datasets = ['train', 'dev', 'test']
+        self.data = {'train': train, 'dev': dev, 'test': test}
+
+    # updated using PhilipMay's dataset and example for reading dataset
+    # csv library used to ignore commas between quotes
+    def loadFile(self, fpath):
+        sick_data = {'X_A': [], 'X_B': [], 'y': []}
+
+        with open(fpath, newline="", encoding="utf-8") as f:
+            csv_dict_reader = csv.DictReader(
+                f,
+                dialect='excel',
+                fieldnames=["sentence1", "sentence2", "similarity_score"],
+            )
+            for row in csv_dict_reader:
+                sick_data['X_A'].append(row['sentence1'].split())
+                sick_data['X_B'].append(row['sentence2'].split())
+                sick_data['y'].append(row['similarity_score'])   
+
+        sick_data['y'] = [float(s) for s in sick_data['y']]
+        self.samples += sick_data['X_A'] + sick_data["X_B"]
+        return (sick_data['X_A'], sick_data["X_B"], sick_data['y'])
+
 class STSBenchmarkFinetune(SICKEval):
     def __init__(self, task_path, seed=1111):
         logging.debug('\n\n***** Transfer task : STSBenchmark*****\n\n')
