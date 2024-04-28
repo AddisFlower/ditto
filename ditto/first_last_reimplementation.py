@@ -187,14 +187,22 @@ params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': 10}
 params_senteval['classifier'] = {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
                         'tenacity': 5, 'epoch_size': 4}
 
-# load model checkpoints
-model = AutoModel.from_pretrained("bert-base-uncased")
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+# # load model checkpoints
+# model = AutoModel.from_pretrained("bert-base-uncased")
+# tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+# load model checkpoints for multilingual model
+model = AutoModel.from_pretrained("bert-base-multilingual-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
+
 # tell pytorch to run the model on GPU
 model.cuda()
 
 # the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
-sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
+# sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
+
+# for testing STSBenchmark ES
+sts_tasks = ['STSBenchmarkES']
 
 # creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.

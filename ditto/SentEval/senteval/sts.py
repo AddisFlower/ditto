@@ -24,6 +24,9 @@ from scipy.stats import spearmanr, pearsonr
 from senteval.utils import cosine
 from senteval.sick import SICKEval
 
+# added for use multilingual STSBenchmark datasets
+import csv
+
 
 class STSEval(object):
     def loadFile(self, fpath):
@@ -255,6 +258,38 @@ class STSBenchmarkEval(STSEval):
                 sick_data['X_A'].append(text[5].split())
                 sick_data['X_B'].append(text[6].split())
                 sick_data['y'].append(text[4])
+
+        sick_data['y'] = [float(s) for s in sick_data['y']]
+        self.samples += sick_data['X_A'] + sick_data["X_B"]
+        return (sick_data['X_A'], sick_data["X_B"], sick_data['y'])
+
+# added for STSBenchmarkEvalES
+class STSBenchmarkEvalES(STSEval):
+    def __init__(self, task_path, seed=1111):
+        logging.debug('\n\n***** Transfer task : STSBenchmarkES*****\n\n')
+        self.seed = seed
+        self.samples = []
+        train = self.loadFile(os.path.join(task_path, 'stsb-es-train.csv'))
+        dev = self.loadFile(os.path.join(task_path, 'stsb-es-dev.csv'))
+        test = self.loadFile(os.path.join(task_path, 'stsb-es-test.csv'))
+        self.datasets = ['train', 'dev', 'test']
+        self.data = {'train': train, 'dev': dev, 'test': test}
+
+    # updated using PhilipMay's dataset and example for reading dataset
+    # csv library used to ignore commas between quotes
+    def loadFile(self, fpath):
+        sick_data = {'X_A': [], 'X_B': [], 'y': []}
+
+        with open(fpath, newline="", encoding="utf-8") as f:
+            csv_dict_reader = csv.DictReader(
+                f,
+                dialect='excel',
+                fieldnames=["sentence1", "sentence2", "similarity_score"],
+            )
+            for row in csv_dict_reader:
+                sick_data['X_A'].append(row['sentence1'].split())
+                sick_data['X_B'].append(row['sentence2'].split())
+                sick_data['y'].append(row['similarity_score'])   
 
         sick_data['y'] = [float(s) for s in sick_data['y']]
         self.samples += sick_data['X_A'] + sick_data["X_B"]

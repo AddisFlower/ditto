@@ -18,7 +18,7 @@ from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
 from senteval.sick import SICKEntailmentEval, SICKEval
 from senteval.mrpc import MRPCEval
-from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval, SICKRelatednessEval, STSBenchmarkFinetune
+from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval, SICKRelatednessEval, STSBenchmarkFinetune, STSBenchmarkEvalES
 from senteval.sst import SSTEval
 from senteval.rank import ImageCaptionRetrievalEval
 from senteval.probing import *
@@ -45,13 +45,15 @@ class SE(object):
         self.batcher = batcher
         self.prepare = prepare if prepare else lambda x, y: None
 
+        # added STSBenchmarkES for checkpoint 2 testing
         self.list_tasks = ['CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
                            'SICKRelatedness', 'SICKEntailment', 'STSBenchmark',
                            'SNLI', 'ImageCaptionRetrieval', 'STS12', 'STS13',
                            'STS14', 'STS15', 'STS16',
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                           'OddManOut', 'CoordinationInversion', 'SICKRelatedness-finetune', 'STSBenchmark-finetune', 'STSBenchmark-fix']
+                           'OddManOut', 'CoordinationInversion', 'SICKRelatedness-finetune', 'STSBenchmark-finetune', 'STSBenchmark-fix',
+                           'STSBenchmarkES']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -83,6 +85,9 @@ class SE(object):
             self.evaluation = SICKRelatednessEval(tpath + '/downstream/SICK', seed=self.params.seed)
         elif name == 'STSBenchmark':
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark', seed=self.params.seed)
+        # added for STSB_ES
+        elif name == 'STSBenchmarkES':
+            self.evaluation = STSBenchmarkEvalES(tpath + '/downstream/STS/STSBenchmarkES', seed=self.params.seed)
         elif name == 'STSBenchmark-fix':
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark-fix', seed=self.params.seed)
         elif name == 'STSBenchmark-finetune':
