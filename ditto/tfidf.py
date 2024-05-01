@@ -30,7 +30,7 @@ def token_importance(tfidf, dictionary, corpus, file_name):
         json.dump(average_tfidf, json_file)
 
 
-language = 'it'
+language = 'pt'
 
 # Create the sentence list using the 1 million wikepedia sentences
 wiki_file_name = f'sampled_{language}_sentences.txt'

@@ -362,7 +362,7 @@ class STSBenchmarkEvalIT(STSEval):
 # added for STSBenchmarkEvalPT
 class STSBenchmarkEvalPT(STSEval):
     def __init__(self, task_path, seed=1111):
-        logging.debug('\n\n***** Transfer task : STSBenchmarkFR*****\n\n')
+        logging.debug('\n\n***** Transfer task : STSBenchmarkPT*****\n\n')
         self.seed = seed
         self.samples = []
         train = self.loadFile(os.path.join(task_path, 'stsb-pt-train.csv'))

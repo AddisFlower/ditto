@@ -94,6 +94,9 @@ class SE(object):
         # added for STSB_IT
         elif name == 'STSBenchmarkIT':
             self.evaluation = STSBenchmarkEvalIT(tpath + '/downstream/STS/STSBenchmarkIT', seed=self.params.seed)
+        # added for STSB_PT
+        elif name == 'STSBenchmarkPT':
+            self.evaluation = STSBenchmarkEvalPT(tpath + '/downstream/STS/STSBenchmarkPT', seed=self.params.seed)
         elif name == 'STSBenchmark-fix':
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark-fix', seed=self.params.seed)
         elif name == 'STSBenchmark-finetune':

@@ -1,8 +1,10 @@
 from datasets import load_dataset
 import random
 from nltk.tokenize import sent_tokenize
+import numpy as np
 
-language = 'it'
+
+language = 'pt'
 
 # If the language is French
 if language == 'fr':
@@ -23,7 +25,7 @@ if language == 'fr':
     sampled_sentences = random.sample(sentences, 1000000)
     # print(len(dataset))
 
-    file_name = 'sampled_french_sentences.txt'
+    file_name = 'sampled_fr_sentences.txt'
     # Save the sentences to a file
     with open(file_name, "w", encoding="utf-8") as file:
         for sentence in sampled_sentences   :
@@ -32,30 +34,35 @@ if language == 'fr':
 # If the language is Spanish
 if language == 'es':
     # Load the spanish Wikipedia dataset
-    dataset = load_dataset("wikimedia/wikipedia", "20231101.es", split='train[:0.5%]')
+    dataset = load_dataset("wikimedia/wikipedia", "20231101.es", split='train', streaming=True)
 
     # Function to extract sentences from a text
     def extract_sentences(text):
         # This can be more complex and handle edge cases better with libraries like spaCy
-        sentences = sent_tokenize(text, language='spanish')
-        return [sentence.strip() for sentence in sentences if sentence.strip()]
+        return sent_tokenize(text, language='spanish')
 
-    # # Apply the function to extract sentences
-    sentences = [sentence for text in dataset['text'] for sentence in extract_sentences(text)]
-
-    # # Sample 1,000,000 sentences randomly
-    sampled_sentences = random.sample(sentences, 1000000)
-    # print(len(dataset))
-
-    file_name = 'sampled_spanish_sentences.txt'
-    # Save the sentences to a file
-    with open(file_name, "w", encoding="utf-8") as file:
-        for sentence in sampled_sentences   :
-            file.write(sentence + "\n")
+    sentences = []
+    i =0
+    for sample in dataset.take(10000):  # Adjust the number taken to ensure you gather enough sentences
+        print(i)
+        article_sentences = extract_sentences(sample['text'])
+        sentences.extend(article_sentences)
+        if len(sentences) > 2000000:  # Collect more to ensure randomness in final sample
+            break
+        i += 1
+    # Ensure that you have at least 1,000,000 sentences
+    if len(sentences) >= 1000000:
+        random_indices = np.random.choice(len(sentences), 1000000, replace=False)
+        sampled_sentences = [sentences[i] for i in random_indices]
+    else:
+        print("Not enough sentences collected, consider increasing the number of articles processed.")
+    with open('sampled_es_sentences.txt', 'w', encoding='utf-8') as f:
+        for sentence in sampled_sentences:
+            f.write(sentence + '\n')
 
 # If the language is Italian
 if language == 'it':
-    # Load the spanish Wikipedia dataset
+    # Load the Italian Wikipedia dataset
     dataset = load_dataset("wikipedia", "20220301.it", split='train[:5%]')
 
     # Function to extract sentences from a text
@@ -71,10 +78,37 @@ if language == 'it':
     sampled_sentences = random.sample(sentences, 1000000)
     # print(len(dataset))
 
-    file_name = 'sampled_italian_sentences.txt'
+    file_name = 'sampled_it_sentences.txt'
     # Save the sentences to a file
     with open(file_name, "w", encoding="utf-8") as file:
         for sentence in sampled_sentences   :
             file.write(sentence + "\n")
 
+# If the language is Portuguese
+if language == 'pt':
+    # Load the spanish Wikipedia dataset
+    dataset = load_dataset("wikimedia/wikipedia", "20231101.pt", split='train', streaming=True)
 
+    # Function to extract sentences from a text
+    def extract_sentences(text):
+        # This can be more complex and handle edge cases better with libraries like spaCy
+        return sent_tokenize(text, language='portuguese')
+
+    sentences = []
+    i =0
+    for sample in dataset.take(30000):  # Adjust the number taken to ensure you gather enough sentences
+        print(i)
+        article_sentences = extract_sentences(sample['text'])
+        sentences.extend(article_sentences)
+        if len(sentences) > 2000000:  # Collect more to ensure randomness in final sample
+            break
+        i += 1
+    # Ensure that you have at least 1,000,000 sentences
+    if len(sentences) >= 1000000:
+        random_indices = np.random.choice(len(sentences), 1000000, replace=False)
+        sampled_sentences = [sentences[i] for i in random_indices]
+    else:
+        print("Not enough sentences collected, consider increasing the number of articles processed.")
+    with open('sampled_pt_sentences.txt', 'w', encoding='utf-8') as f:
+        for sentence in sampled_sentences:
+            f.write(sentence + '\n')
