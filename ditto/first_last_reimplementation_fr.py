@@ -15,7 +15,7 @@ from prettytable import PrettyTable
 # constants used to represent necessary paths for SentEval
 PATH_TO_SENTEVAL = './SentEval'
 PATH_TO_DATA = './SentEval/data'
-BERT_IMPORTANCE_ATTENTION_LAYER = 1
+BERT_IMPORTANCE_ATTENTION_LAYER = 3
 BERT_IMPORTANCE_ATTENTION_HEAD = 10
 
 # load SentEval toolkit
@@ -192,14 +192,14 @@ params_senteval['classifier'] = {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
 # tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 # load model checkpoints for multilingual model
-model = AutoModel.from_pretrained("bert-base-uncased")
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = AutoModel.from_pretrained("bert-base-multilingual-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
 # tell pytorch to run the model on GPU
 model.cuda()
 
-# the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
-sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
+# for multilingual testing on translated STSBenchmark datasets (ignore avg spearman correlation)
+sts_tasks = ['STSBenchmarkFR']
 
 # creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.

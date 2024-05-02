@@ -142,9 +142,7 @@ def grid_search(bert_importance_attention, model, tokenizer, sts_tasks):
         # append a singleton dimension to diagonal_values for the same reasoning as above
         broadcastable_diagonal_values = diagonal_values.unsqueeze(-1)
 
-        # note: use commented line of code for results of regular BERT first-last baseline
         ditto_word_embeddings = first_last_hidden_padding_zero * broadcastable_diagonal_values
-        # ditto_word_embeddings = first_last_hidden_padding_zero
 
         # # for debugging
         # print(broadcastable_diagonal_values[0])

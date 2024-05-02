@@ -149,7 +149,8 @@ def batcher(params, batch):
     # append a singleton dimension to diagonal_values for the same reasoning as above
     broadcastable_diagonal_values = diagonal_values.unsqueeze(-1)
 
-    ditto_word_embeddings = first_last_hidden_padding_zero * broadcastable_diagonal_values
+    # evaluate results of mBERT first-last baseline
+    ditto_word_embeddings = first_last_hidden_padding_zero
 
     # # for debugging
     # print(broadcastable_diagonal_values[0])
@@ -192,14 +193,14 @@ params_senteval['classifier'] = {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
 # tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 # load model checkpoints for multilingual model
-model = AutoModel.from_pretrained("bert-base-uncased")
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = AutoModel.from_pretrained("bert-base-multilingual-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 
 # tell pytorch to run the model on GPU
 model.cuda()
 
-# the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
-sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
+# for multilingual testing on translated STSBenchmark datasets (ignore avg spearman correlation)
+sts_tasks = ['STSBenchmarkES', 'STSBenchmarkFR', 'STSBenchmarkIT', 'STSBenchmarkPT']
 
 # creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.
