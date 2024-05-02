@@ -149,7 +149,9 @@ def batcher(params, batch):
     # append a singleton dimension to diagonal_values for the same reasoning as above
     broadcastable_diagonal_values = diagonal_values.unsqueeze(-1)
 
-    ditto_word_embeddings = first_last_hidden_padding_zero * broadcastable_diagonal_values
+    # note: commented to evaluate results of regular BERT first-last baseline
+    # ditto_word_embeddings = first_last_hidden_padding_zero * broadcastable_diagonal_values
+    ditto_word_embeddings = first_last_hidden_padding_zero
 
     # # for debugging
     # print(broadcastable_diagonal_values[0])
@@ -201,8 +203,14 @@ model.cuda()
 # the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
 # sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
 
-# for testing STSBenchmark ES
-sts_tasks = ['STSBenchmarkES']
+# for multilingual testing on translated STSBenchmark datasets (ignore avg spearman correlation)
+sts_tasks = ['STSBenchmarkES', 'STSBenchmarkFR', 'STSBenchmarkIT']
+
+# for testing STSBenchmark FR
+# sts_tasks = ['STSBenchmarkFR']
+
+# for testing STSBenchmark IT
+# sts_tasks = ['STSBenchmarkIT']
 
 # creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.

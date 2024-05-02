@@ -78,6 +78,138 @@ class STSEval(object):
         all_gs_scores = []
 
         for dataset in self.datasets:
+            # # for testing
+            # print(self.datasets)
+            # exit(1)
+
+            # input1 is a list of all the words in the first sentences in the dataset
+            # input2 is a list of all the words in the second sentences in the dataset
+            # gs_scores are the human-annotated text similarity scores
+            # sys_scores are the machine computed text similarity scores
+            # note: input1, input2, gs_scores all have the same length
+            sys_scores = []
+            input1, input2, gs_scores = self.data[dataset]
+
+            all_enc1 = []
+            all_enc2 = []
+            for ii in range(0, len(gs_scores), params.batch_size):
+                batch1 = input1[ii:ii + params.batch_size]
+                batch2 = input2[ii:ii + params.batch_size]
+
+                # we assume get_batch already throws out the faulty ones
+                if len(batch1) == len(batch2) and len(batch1) > 0:
+                    enc1 = batcher(params, batch1)
+                    enc2 = batcher(params, batch2)
+                    all_enc1.append(enc1.detach())
+                    all_enc2.append(enc2.detach())
+
+                    for kk in range(enc2.shape[0]):
+                        sys_score = self.similarity(enc1[kk], enc2[kk])
+                        sys_scores.append(sys_score)
+            all_sys_scores.extend(sys_scores)
+            all_gs_scores.extend(gs_scores)
+
+            # # for error analysis testing
+            # print(len(input1))
+            # print(len(input2))
+            # print(len(gs_scores))
+            # print(len(sys_scores))
+            # exit(1)
+
+            # # for error analysis
+            # # note: input1, input2, gs_scores, and sys_scores are lists with the same length
+            # # compute the largest difference between the sys_scores and gs_scores for each dataset
+            # score_diffs = [abs(gs_scores[i] - sys_scores[i]) for i in range(len(sys_scores))]
+            # # print(f'Maximum model score: {max(sys_scores)}')
+            # # print(f'Minimum model score: {min(sys_scores)}')
+            # max_difference = max(score_diffs)
+            # max_difference_idx = score_diffs.index(max_difference)
+            # print(f'For this dataset, the max difference in sts scores was: {max_difference}')
+            # print('The first sentence was:')
+            # print(input1[max_difference_idx])
+            # print('The second sentence was:')
+            # print(input2[max_difference_idx])
+            # print(f'The Human-annotated score was: {gs_scores[max_difference_idx]}')
+            # print(f'The Machine computed score was: {sys_scores[max_difference_idx]}')
+
+            def _norm(x, eps=1e-8): 
+                xnorm = torch.linalg.norm(x, dim=-1)
+                xnorm = torch.max(xnorm, torch.ones_like(xnorm) * eps)
+                return x / xnorm.unsqueeze(dim=-1)
+
+            # from Wang and Isola (with a bit of modification)
+            # only consider pairs with gs > 4 (from footnote 3)
+            def _lalign(x, y, ok, alpha=2):
+                return ((_norm(x) - _norm(y)).norm(dim=1).pow(alpha) * ok).sum() / ok.sum()
+            
+            def _lunif(x, t=2):
+                sq_pdist = torch.pdist(_norm(x), p=2).pow(2)
+                return sq_pdist.mul(-t).exp().mean().log()
+
+            ok = (torch.Tensor(gs_scores) > 4).int()
+            align = _lalign(
+                torch.cat(all_enc1), 
+                torch.cat(all_enc2), 
+                ok).item()
+
+            # consider all sentences (from footnote 3)
+            unif = _lunif(torch.cat(all_enc1 + all_enc2)).item()
+
+            results[dataset] = {'pearson': pearsonr(sys_scores, gs_scores),
+                                'spearman': spearmanr(sys_scores, gs_scores),
+                                'nsamples': len(sys_scores),
+                                'align_loss': align,  # newly added
+                                'uniform_loss': unif}  # newly added
+            # logging.debug('%s : pearson = %.4f, spearman = %.4f' %
+            #               (dataset, results[dataset]['pearson'][0],
+            #                results[dataset]['spearman'][0]))
+            logging.debug('%s : pearson = %.4f, spearman = %.4f, align_loss = %.4f, uniform_loss = %.4f' %
+                          (dataset, results[dataset]['pearson'][0],
+                           results[dataset]['spearman'][0], results[dataset]['align_loss'],
+                           results[dataset]['uniform_loss']))
+
+            # logging.info(f'align {align}\t\t uniform {unif}')
+
+        weights = [results[dset]['nsamples'] for dset in results.keys()]
+        list_prs = np.array([results[dset]['pearson'][0] for
+                            dset in results.keys()])
+        list_spr = np.array([results[dset]['spearman'][0] for
+                            dset in results.keys()])
+
+        avg_pearson = np.average(list_prs)
+        avg_spearman = np.average(list_spr)
+        wavg_pearson = np.average(list_prs, weights=weights)
+        wavg_spearman = np.average(list_spr, weights=weights)
+        all_pearson = pearsonr(all_sys_scores, all_gs_scores)
+        all_spearman = spearmanr(all_sys_scores, all_gs_scores)
+        results['all'] = {'pearson': {'all': all_pearson[0],
+                                      'mean': avg_pearson,
+                                      'wmean': wavg_pearson},
+                          'spearman': {'all': all_spearman[0],
+                                       'mean': avg_spearman,
+                                       'wmean': wavg_spearman}}
+        logging.debug('ALL : Pearson = %.4f, \
+            Spearman = %.4f' % (all_pearson[0], all_spearman[0]))
+        logging.debug('ALL (weighted average) : Pearson = %.4f, \
+            Spearman = %.4f' % (wavg_pearson, wavg_spearman))
+        logging.debug('ALL (average) : Pearson = %.4f, \
+            Spearman = %.4f\n' % (avg_pearson, avg_spearman))
+
+        return results
+    
+    # alternate run method for use in performing grid search of best importance attention layer
+    # and importance attention head
+    # grid search follows authors' methodology of being run on the STSB-dev dataset
+    def run_stsb_gs(self, params, batcher):
+        results = {}
+        all_sys_scores = []
+        all_gs_scores = []
+
+        for dataset in ['dev']:
+            # # for testing
+            # print(self.datasets)
+            # exit(1)
+
             # input1 is a list of all the words in the first sentences in the dataset
             # input2 is a list of all the words in the second sentences in the dataset
             # gs_scores are the human-annotated text similarity scores
