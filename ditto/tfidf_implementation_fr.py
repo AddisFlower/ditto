@@ -36,26 +36,28 @@ def print_table(task_names, scores):
 def prepare(params, samples):
     return
 
+lan = 'pt'
 
-# # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the English Wikipedia file 
-# with open('average_tfidf_en.json', 'r') as json_file:
-#     average_tfidf = json.load(json_file)
-
-# # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the French Wikipedia file 
-# with open('average_tfidf_fr.json', 'r') as json_file:
-#     average_tfidf = json.load(json_file)
-
-# # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Italian Wikipedia file 
-# with open('average_tfidf_it.json', 'r') as json_file:
-#     average_tfidf = json.load(json_file)
-
-# # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Spanish Wikipedia file 
-# with open('average_tfidf_es.json', 'r') as json_file:
-#     average_tfidf = json.load(json_file)
-
+if lan == 'en':
+# Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the English Wikipedia file 
+    with open('average_tfidf_en.json', 'r') as json_file:
+        average_tfidf = json.load(json_file)
+elif lan == 'fr':
+# Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the French Wikipedia file 
+    with open('average_tfidf_fr.json', 'r') as json_file:
+        average_tfidf = json.load(json_file)
+if lan == 'it':
+# Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Italian Wikipedia file 
+    with open('average_tfidf_it.json', 'r') as json_file:
+        average_tfidf = json.load(json_file)
+if lan == 'es':
+# Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Spanish Wikipedia file 
+    with open('average_tfidf_es.json', 'r') as json_file:
+        average_tfidf = json.load(json_file)
+if lan == 'pt':
 # Open the json file that contains the dictionary that has average TF-IDF weight for each token encountered in the Portuguese Wikipedia file 
-with open('average_tfidf_pt.json', 'r') as json_file:
-    average_tfidf = json.load(json_file)
+    with open('average_tfidf_pt.json', 'r') as json_file:
+        average_tfidf = json.load(json_file)
 
 # note: batcher (transforms a batch of text sentences into sentence embeddings)
 def batcher(params, batch):
@@ -206,21 +208,21 @@ model.cuda()
 
 # the 7 commonly used semantic textual similarity (STS) datasets used by the authors 
 # sts_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
-
-# # # for testing STSBenchmark EN
-# sts_tasks = ['STSBenchmark']
-
-# # for testing STSBenchmark FR
-# sts_tasks = ['STSBenchmarkFR']
-
-# # for testing STSBenchmark IT
-# sts_tasks = ['STSBenchmarkIT']
-
-# # for testing STSBenchmark ES
-# sts_tasks = ['STSBenchmarkES']
-
-# for testing STSBenchmark PT
-sts_tasks = ['STSBenchmarkPT']
+if lan == 'en':
+    # # for testing STSBenchmark EN
+    sts_tasks = ['STSBenchmark']
+elif lan == 'fr':
+    # for testing STSBenchmark FR
+    sts_tasks = ['STSBenchmarkFR']
+elif lan == 'it':
+    # for testing STSBenchmark IT
+    sts_tasks = ['STSBenchmarkIT']
+elif lan == 'es':
+    # for testing STSBenchmark ES
+    sts_tasks = ['STSBenchmarkES']
+elif lan == 'pt':
+    # for testing STSBenchmark PT
+    sts_tasks = ['STSBenchmarkPT']
 
 # creates an object of the class associated with the task, which loads the required datasets,
 # then initializes the created object's similarity field and runs the prepare function.
