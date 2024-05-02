@@ -53,7 +53,8 @@ class SE(object):
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                            'OddManOut', 'CoordinationInversion', 'SICKRelatedness-finetune', 'STSBenchmark-finetune', 'STSBenchmark-fix',
-                           'STSBenchmarkES', 'STSBenchmarkFR', 'STSBenchmarkIT', 'STSBenchmarkPT']
+                           'STSBenchmarkES', 'STSBenchmarkFR', 'STSBenchmarkIT', 'STSBenchmarkPT',
+                           'STSBenchmark_gs', 'STSBenchmarkES_gs', 'STSBenchmarkFR_gs', 'STSBenchmarkIT_gs', 'STSBenchmarkPT_gs']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -83,19 +84,26 @@ class SE(object):
             self.evaluation = MRPCEval(tpath + '/downstream/MRPC', seed=self.params.seed)
         elif name == 'SICKRelatedness':
             self.evaluation = SICKRelatednessEval(tpath + '/downstream/SICK', seed=self.params.seed)
-        elif name == 'STSBenchmark':
+        # modified for performing grid search
+        # elif name == 'STSBenchmark':
+        #     self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark', seed=self.params.seed)
+        elif name in ['STSBenchmark', 'STSBenchmark_gs']:
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark', seed=self.params.seed)
         # added for STSB_ES
-        elif name == 'STSBenchmarkES':
+        # modified for performing grid search
+        elif name in ['STSBenchmarkES', 'STSBenchmarkES_gs']:
             self.evaluation = STSBenchmarkEvalES(tpath + '/downstream/STS/STSBenchmarkES', seed=self.params.seed)
         # added for STSB_FR
-        elif name == 'STSBenchmarkFR':
+        # modified for performing grid search
+        elif name in ['STSBenchmarkFR', 'STSBenchmarkFR_gs']:
             self.evaluation = STSBenchmarkEvalFR(tpath + '/downstream/STS/STSBenchmarkFR', seed=self.params.seed)
         # added for STSB_IT
-        elif name == 'STSBenchmarkIT':
+        # modified for performing grid search
+        elif name in ['STSBenchmarkIT', 'STSBenchmarkIT_gs']:
             self.evaluation = STSBenchmarkEvalIT(tpath + '/downstream/STS/STSBenchmarkIT', seed=self.params.seed)
         # added for STSB_PT
-        elif name == 'STSBenchmarkPT':
+        # modified for performing grid search
+        elif name in ['STSBenchmarkPT', 'STSBenchmarkPT_gs']:
             self.evaluation = STSBenchmarkEvalPT(tpath + '/downstream/STS/STSBenchmarkPT', seed=self.params.seed)
         elif name == 'STSBenchmark-fix':
             self.evaluation = STSBenchmarkEval(tpath + '/downstream/STS/STSBenchmark-fix', seed=self.params.seed)
@@ -140,6 +148,10 @@ class SE(object):
         self.params.current_task = name
         self.evaluation.do_prepare(self.params, self.prepare)
 
-        self.results = self.evaluation.run(self.params, self.batcher)
+        # added conditional for performing grid search on STSBenchmark dataset
+        if name in ['STSBenchmark_gs', 'STSBenchmarkES_gs', 'STSBenchmarkFR_gs', 'STSBenchmarkIT_gs', 'STSBenchmarkPT_gs']:
+            self.results = self.evaluation.run_stsb_gs(self.params, self.batcher)
+        else:
+            self.results = self.evaluation.run(self.params, self.batcher)
 
         return self.results
