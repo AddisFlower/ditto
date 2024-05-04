@@ -116,7 +116,10 @@ def make_testset(langs, sentence_en):
     return sentences
 
 if __name__ == "__main__":
+    # Set of source language + languages to translate into
     langs = ['en', 'es', 'fr', 'it', 'pt']
+
+    #Set starting sentence to what we want
     sentence_set = make_testset(langs, "The happy cat eats.")
 
     #Calculate all possible smiliarity scores across permutations
@@ -132,7 +135,7 @@ if __name__ == "__main__":
 
             bert_similarity = compute_similarity(bert_embedding1, bert_embedding2)
             ditto_similarity = compute_similarity(ditto_embedding1, ditto_embedding2)
-
-            print("[", langs[i], ":", langs[j], "]\tCosine Similarity (BERT): ", bert_similarity)
-            print("[", langs[i], ":", langs[j], "]\tCosine Similarity (Ditto): ", ditto_similarity)
+            print("[", langs[i], ":", langs[j], "]")
+            print("\tCosine Similarity (BERT): ", bert_similarity)
+            print("\tCosine Similarity (Ditto): ", ditto_similarity)
             print()
