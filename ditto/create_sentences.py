@@ -11,17 +11,15 @@ if language == 'fr':
     # Load the French Wikipedia dataset
     dataset = load_dataset("wikimedia/wikipedia", "20231101.fr", split='train[:0.5%]')
 
-
     # Function to extract sentences from a text
     def extract_sentences(text):
-        # This can be more complex and handle edge cases better with libraries like spaCy
         sentences = sent_tokenize(text, language='french')
         return [sentence.strip() for sentence in sentences if sentence.strip()]
 
-    # # Apply the function to extract sentences
+    # Extract sentences
     sentences = [sentence for text in dataset['text'] for sentence in extract_sentences(text)]
 
-    # # Sample 1,000,000 sentences randomly
+    # Sample 1,000,000 sentences randomly
     sampled_sentences = random.sample(sentences, 1000000)
     # print(len(dataset))
 
@@ -38,18 +36,15 @@ if language == 'es':
 
     # Function to extract sentences from a text
     def extract_sentences(text):
-        # This can be more complex and handle edge cases better with libraries like spaCy
         return sent_tokenize(text, language='spanish')
 
+    # Collect 2,000,000 sentences to randomly sample 1,000,000 later
     sentences = []
-    i =0
-    for sample in dataset.take(10000):  # Adjust the number taken to ensure you gather enough sentences
-        print(i)
+    for sample in dataset.take(10000):  
         article_sentences = extract_sentences(sample['text'])
         sentences.extend(article_sentences)
-        if len(sentences) > 2000000:  # Collect more to ensure randomness in final sample
+        if len(sentences) > 2000000:  
             break
-        i += 1
     # Ensure that you have at least 1,000,000 sentences
     if len(sentences) >= 1000000:
         random_indices = np.random.choice(len(sentences), 1000000, replace=False)
@@ -67,16 +62,14 @@ if language == 'it':
 
     # Function to extract sentences from a text
     def extract_sentences(text):
-        # This can be more complex and handle edge cases better with libraries like spaCy
         sentences = sent_tokenize(text, language='italian')
         return [sentence.strip() for sentence in sentences if sentence.strip()]
 
-    # # Apply the function to extract sentences
+    # Extract sentences
     sentences = [sentence for text in dataset['text'] for sentence in extract_sentences(text)]
 
-    # # Sample 1,000,000 sentences randomly
+    # Sample 1,000,000 sentences randomly
     sampled_sentences = random.sample(sentences, 1000000)
-    # print(len(dataset))
 
     file_name = 'sampled_it_sentences.txt'
     # Save the sentences to a file
@@ -86,23 +79,21 @@ if language == 'it':
 
 # If the language is Portuguese
 if language == 'pt':
-    # Load the spanish Wikipedia dataset
+    # Load the portuguese Wikipedia dataset
     dataset = load_dataset("wikimedia/wikipedia", "20231101.pt", split='train', streaming=True)
 
     # Function to extract sentences from a text
     def extract_sentences(text):
-        # This can be more complex and handle edge cases better with libraries like spaCy
         return sent_tokenize(text, language='portuguese')
 
     sentences = []
-    i =0
-    for sample in dataset.take(30000):  # Adjust the number taken to ensure you gather enough sentences
+    # Collect 2,000,000 sentences to randomly sample 1,000,000 later
+    for sample in dataset.take(30000):
         print(i)
         article_sentences = extract_sentences(sample['text'])
         sentences.extend(article_sentences)
         if len(sentences) > 2000000:  # Collect more to ensure randomness in final sample
             break
-        i += 1
     # Ensure that you have at least 1,000,000 sentences
     if len(sentences) >= 1000000:
         random_indices = np.random.choice(len(sentences), 1000000, replace=False)

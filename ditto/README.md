@@ -48,6 +48,22 @@ python tfidf.py
 sh run_eval_ditto.sh
 ```
 
+Steps for reproducing the average scores for our implementation of MBERT first-last TF-IDF on the STSBenchmark dataset translated to the four languages.
+1. The first step is to extract random sentences from wikipedia in the target language. Set the "language" variable at the top of the create_sentences.py file to the language you want to create the TF-IDF weights for. The "language" variable can be set to any of these values: ['pt', 'es', 'fr', 'it']. After that, simply run the command below.
+```shell
+python create_sentences.py
+```
+
+2. The second step is to create the TF-IDF weights using the sentences you created from the previous command. You first have to modify the "language" variable in the tfidf.py file to be the same value as the one you set in the create_sentences.py. After that, simply run the command below.
+```shell
+python tfidf.py
+```
+
+3. The last step is to create the sentence embeddings using these TF-IDF weights. Before running the command below however, make sure to set the "lan" variable in the tfidf_implementation_fr.py file to be to the same value you set in the previous two files. This will result in the average score of these embeddings on the STSBenchmark dataset translated to the language you chose.
+```shell
+python tfidf_implementation_fr.py
+```
+
 ## Acknowledgement
 We utilized/referenced a large amount of code from the Ditto paper's authors.
 
