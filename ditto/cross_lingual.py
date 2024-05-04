@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoModel, AutoTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
+from deep_translator import GoogleTranslator
 # import tfidf
 
 def get_bert_embedding(sentence):
@@ -89,26 +90,49 @@ def compute_similarity(embedding1, embedding2):
     similarity = cosine_similarity(embedding1.reshape(1, -1), embedding2.reshape(1, -1))[0, 0]
     return similarity
 
-def main(sentence1, sentence2):
-    # Get BERT embedding for each sentence
-    bert_embedding1 = get_bert_embedding(sentence1)
-    bert_embedding2 = get_bert_embedding(sentence2)
+# def main(sentence1, sentence2):
+#     # Get BERT embedding for each sentence
+#     bert_embedding1 = get_bert_embedding(sentence1)
+#     bert_embedding2 = get_bert_embedding(sentence2)
 
-    # Get Ditto embedding for each sentence
-    ditto_embedding1 = get_ditto_embedding(sentence1, model_name_or_path="bert-base-multilingual-uncased")
-    ditto_embedding2 = get_ditto_embedding(sentence2, model_name_or_path="bert-base-multilingual-uncased")
+#     # Get Ditto embedding for each sentence
+#     ditto_embedding1 = get_ditto_embedding(sentence1, model_name_or_path="bert-base-multilingual-uncased")
+#     ditto_embedding2 = get_ditto_embedding(sentence2, model_name_or_path="bert-base-multilingual-uncased")
 
-    # Compute cosine similarity between BERT embeddings
-    bert_similarity = compute_similarity(bert_embedding1, bert_embedding2)
+#     # Compute cosine similarity between BERT embeddings
+#     bert_similarity = compute_similarity(bert_embedding1, bert_embedding2)
 
-    # Compute cosine similarity between Ditto embeddings
-    ditto_similarity = compute_similarity(ditto_embedding1, ditto_embedding2)
+#     # Compute cosine similarity between Ditto embeddings
+#     ditto_similarity = compute_similarity(ditto_embedding1, ditto_embedding2)
 
-    return bert_similarity, ditto_similarity
+#     return bert_similarity, ditto_similarity
+
+def make_testset(langs, sentence_en):
+    langs = ['en', 'es', 'fr', 'it', 'pt']
+    sentences = [sentence_en]
+    for lang in langs[1:]
+        translator = GoogleTranslator(source='en', target=lang)
+        sentences.append(translator.translate(sentence_en))
+    return sentences
 
 if __name__ == "__main__":
-    sentence1 = "This is a test sentence."
-    sentence2 = "This is another test sentence."
-    bert_similarity, ditto_similarity = main(sentence1, sentence2)
-    print("Cosine Similarity (BERT):", bert_similarity)
-    print("Cosine Similarity (Ditto):", ditto_similarity)
+    langs = ['en', 'es', 'fr', 'it', 'pt']
+    sentence_set = make_testset(langs, "The happy cat eats.")
+
+    #Calculate all possible smiliarity scores across permutations
+    for i in range(len(sentence_set)):
+        for j in range(i + 1, len(sentence_set)):
+             # Get BERT embedding for each sentence
+            bert_embedding1 = get_bert_embedding(sentence_set[i])
+            bert_embedding2 = get_bert_embedding(sentence_set[j])
+
+            # Get Ditto embedding for each sentence
+            ditto_embedding1 = get_ditto_embedding(sentence_set[i], model_name_or_path="bert-base-multilingual-uncased")
+            ditto_embedding2 = get_ditto_embedding(sentence_set[j], model_name_or_path="bert-base-multilingual-uncased")
+
+            bert_similarity = compute_similarity(bert_embedding1, bert_embedding2)
+            ditto_similarity = compute_similarity(ditto_embedding1, ditto_embedding2)
+
+            print("[", langs[i], ":", langs[j], "]\tCosine Similarity (BERT): ", bert_similarity)
+            print("[", langs[i], ":", langs[j], "]\tCosine Similarity (Ditto): ", ditto_similarity)
+            print()
