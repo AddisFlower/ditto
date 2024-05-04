@@ -15,8 +15,14 @@ from prettytable import PrettyTable
 # constants used to represent necessary paths for SentEval
 PATH_TO_SENTEVAL = './SentEval'
 PATH_TO_DATA = './SentEval/data'
+
+# tuned hyperparameters using grid search for French
 BERT_IMPORTANCE_ATTENTION_LAYER = 3
 BERT_IMPORTANCE_ATTENTION_HEAD = 10
+
+# # un-tuned multilingual hyperparameters from paper
+# BERT_IMPORTANCE_ATTENTION_LAYER = 1
+# BERT_IMPORTANCE_ATTENTION_HEAD = 10
 
 # load SentEval toolkit
 # note: the SimCSE paper authors made the following modifications to the SentEval toolkit

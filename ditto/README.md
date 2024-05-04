@@ -48,6 +48,19 @@ python tfidf.py
 sh run_eval_ditto.sh
 ```
 
+Steps for obtaining the Machine-Translated STSBenchmark Datasets utilized in this paper. (Credit to: PhilipMay. This step assumes that you have run download_dataset.sh)
+1. Clone the stsb-multi-mt repository into the home directory on your machine.
+```shell
+git clone https://github.com/PhilipMay/stsb-multi-mt.git
+```
+
+2. Setup the multilingual STSBenchmark folders in SentEval (This step assumes that you are currently in the inner ditto folder of the repository)
+```shell
+cd SentEval/data/downstream/
+bash multilingual_data_setup.sh
+cd ../../../
+```
+
 Steps for reproducing the average scores for our implementation of MBERT first-last TF-IDF on the STSBenchmark dataset translated to the four languages.
 1. The first step is to extract random sentences from wikipedia in the target language. Set the "language" variable at the top of the create_sentences.py file to the language you want to create the TF-IDF weights for. The "language" variable can be set to any of these values: ['pt', 'es', 'fr', 'it']. After that, simply run the command below.
 ```shell
@@ -62,6 +75,21 @@ python tfidf.py
 3. The last step is to create the sentence embeddings using these TF-IDF weights. Before running the command below however, make sure to set the "lan" variable in the tfidf_implementation_fr.py file to be to the same value you set in the previous two files. This will result in the average score of these embeddings on the STSBenchmark dataset translated to the language you chose.
 ```shell
 python tfidf_implementation_fr.py
+```
+
+To obtain the Tuned Importance Attention Layer and Importance Attention Head run: 
+```shell
+python grid_search.py
+```
+
+To obtain the Baseline MBERT results run:
+```shell
+python first_last_multilingual_baselines.py
+```
+
+To obtain the Tuned MBERT First-Last Ditto results run:
+```shell
+bash multilingual_experiments.sh
 ```
 
 ## Acknowledgement
