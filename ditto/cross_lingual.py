@@ -81,24 +81,8 @@ def get_ditto_embedding(sentence, model_name_or_path, pooler='cls', layer=0, hea
             -1).unsqueeze(-1)
         embedding = pooled_result.cpu().numpy()
     else:
-    # Test sentence embedding with BERT and Ditto
-    sentence = "This is a test sentence."
-
-    # Get BERT embedding
-    bert_embedding = get_bert_embedding(sentence)
-
-    # Get Ditto embedding
-    ditto_embedding = tfidf.get_ditto_embedding(sentence)
-
-    print("BERT embedding:", bert_embedding)
-    print("Ditto embedding:", ditto_embedding)
-
-if __name__ == "__main__":
-    sentence1 = "This is a test sentence."
-    sentence2 = "This is another test sentence."
-    bert_similarity, ditto_similarity = main(sentence1, sentence2)
-    print("Cosine Similarity (BERT):", bert_similarity)
-    print("Cosine Similarity (Ditto):", ditto_similarity)
+        raise NotImplementedError
+    return embedding
 
 def compute_similarity(embedding1, embedding2):
     # Compute cosine similarity between two embeddings
@@ -111,8 +95,8 @@ def main(sentence1, sentence2):
     bert_embedding2 = get_bert_embedding(sentence2)
 
     # Get Ditto embedding for each sentence
-    ditto_embedding1 = get_ditto_embedding(sentence1, model_name_or_path="path_to_ditto_model")
-    ditto_embedding2 = get_ditto_embedding(sentence2, model_name_or_path="path_to_ditto_model")
+    ditto_embedding1 = get_ditto_embedding(sentence1, model_name_or_path="bert-base-multilingual-uncased")
+    ditto_embedding2 = get_ditto_embedding(sentence2, model_name_or_path="bert-base-multilingual-uncased")
 
     # Compute cosine similarity between BERT embeddings
     bert_similarity = compute_similarity(bert_embedding1, bert_embedding2)
@@ -121,3 +105,10 @@ def main(sentence1, sentence2):
     ditto_similarity = compute_similarity(ditto_embedding1, ditto_embedding2)
 
     return bert_similarity, ditto_similarity
+
+if __name__ == "__main__":
+    sentence1 = "This is a test sentence."
+    sentence2 = "This is another test sentence."
+    bert_similarity, ditto_similarity = main(sentence1, sentence2)
+    print("Cosine Similarity (BERT):", bert_similarity)
+    print("Cosine Similarity (Ditto):", ditto_similarity)
